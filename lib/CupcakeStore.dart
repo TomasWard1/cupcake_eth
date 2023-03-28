@@ -9,5 +9,5 @@ class CupcakeStore extends GetView<ContractLinker> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(body: Container());
-  }
+  } //
 }
