@@ -4,7 +4,9 @@ import 'package:get/get.dart';
 import 'contract_linking.dart';
 
 class CupcakeStore extends GetView<ContractLinker> {
-  const CupcakeStore({super.key});
+  CupcakeStore({super.key});
+
+  final ContractLinker cl = ContractLinker();
 
   @override
   Widget build(BuildContext context) {
@@ -12,24 +14,38 @@ class CupcakeStore extends GetView<ContractLinker> {
       child: Scaffold(
           body: Padding(
         padding: const EdgeInsets.all(15),
-        child: Column(children: [
-          Image.asset('assets/cupcake.png', width: 100, height: 100),
-          const Text('Cupcake ETH', style: TextStyle(color: Colors.black, fontSize: 30, fontWeight: FontWeight.bold)),
-          const Spacer(),
-          Row(
-            children: [
-              const Spacer(),
-              actionButton('Buy From Machine', () {
-                print('Buy From Machine');
-              }),
-              const Spacer(),
-              actionButton('Buy From User', () {
-                print('Buy From User');
-              }),
-              const Spacer(),
-            ],
-          )
-        ]),
+        child: Obx(
+          () => Column(children: [
+            Image.asset('assets/cupcake.png', width: 100, height: 100),
+            const Text('Cupcake ETH', style: TextStyle(color: Colors.black, fontSize: 30, fontWeight: FontWeight.bold)),
+            Container(
+                margin: const EdgeInsets.only(top: 40),
+                width: double.infinity,
+                child: Text(
+                  'Machine Balance: ${cl.machineBalance.value}',
+                  style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.normal),
+                  textAlign: TextAlign.left,
+                )),
+            const Spacer(),
+            Row(
+              children: [
+                const Spacer(),
+                actionButton('💵 Machine', () {
+                  print('Buy From Machine');
+                }),
+                const Spacer(),
+                actionButton('💵 User', () {
+                  print('Buy From User');
+                }),
+                const Spacer(),
+                actionButton('🔃 Reset', () {
+                  print('Reset');
+                }),
+                const Spacer(),
+              ],
+            )
+          ]),
+        ),
       )),
     );
   }

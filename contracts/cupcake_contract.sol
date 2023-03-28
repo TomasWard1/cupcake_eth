@@ -25,7 +25,7 @@ contract VendingMachine {
     }
 
     function incrementCount() internal {
-        balanceCount += 1;
+        balance_count += 1;
     }
 
     function buyFromMachine(uint amount) public {

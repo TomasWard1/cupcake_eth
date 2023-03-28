@@ -1,8 +1,12 @@
+import 'package:cupcake_eth2/contract_linking.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 import 'CupcakeStore.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  Get.put(ContractLinker());
   runApp(const MyApp());
 }
 
@@ -16,7 +20,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const CupcakeStore(),
+      home: CupcakeStore(),
     );
   }
 }

@@ -11,10 +11,17 @@ class ContractLinker extends GetxController {
   final String _wsUrl = "ws://10.0.2.2:7545/";
   final String _privateKey = "0x1d7b7ded689291a5e0ad27c2be3bcee534dde5fefb783f44877a3b645b628be5";
 
+  @override
+  void onInit() async {
+    await contractLinking();
+    super.onInit();
+  }
+
   //my vars
   final contractLoading = true.obs;
   final economicState = ''.obs;
   final balanceCount = 0.obs;
+  final machineBalance = 0.obs;
   final balances = {}.obs;
 
   //contract vars
@@ -33,8 +40,8 @@ class ContractLinker extends GetxController {
   late ContractFunction _balanceCount;
   late ContractFunction _machineBalance;
 
-  contractLinking() {
-    initialSetup();
+  contractLinking() async {
+    await initialSetup();
   }
 
   initialSetup() async {
@@ -78,6 +85,7 @@ class ContractLinker extends GetxController {
 
     await addMe();
     await setEconomicState();
+    await getBalances();
 
     contractLoading.value = false;
   }
@@ -94,10 +102,19 @@ class ContractLinker extends GetxController {
   }
 
   getBalances() async {
+    print('getting balances');
+
+    //get machine balance
+    List machineBalanceList = await _client.call(contract: _contract, function: _balanceCount, params: []);
+    BigInt machineBalanceBigInt = machineBalanceList[0];
+    machineBalance.value = machineBalanceBigInt.toInt();
+
+    //get balance count
     List balanceCountList = await _client.call(contract: _contract, function: _balanceCount, params: []);
     BigInt balanceCountBigInt = balanceCountList[0];
     balanceCount.value = balanceCountBigInt.toInt();
 
+    //get all user balances and store them in a map
     for (var i = 0; i < balanceCount.value; i++) {
       List temp = await _client.call(contract: _contract, function: _balances, params: []);
       balances[temp[i][0]] = temp[i][1];
