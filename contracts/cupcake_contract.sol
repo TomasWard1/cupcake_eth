@@ -3,9 +3,10 @@ pragma solidity 0.8.19;
 contract VendingMachine {
 
     //variables
-    uint public machine_balance = 100;
+    uint public machine_balance = 200;
     uint256 public balance_count;
     address owner;
+    address[] activeAddresses;
     mapping(address => uint) public balances;
 
     //functions
@@ -21,6 +22,7 @@ contract VendingMachine {
 
     function addPerson(address eth_address) public onlyOwner {
         balances[eth_address] = 0;
+        activeAddresses.push(eth_address);
         incrementCount();
     }
 

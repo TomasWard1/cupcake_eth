@@ -6,8 +6,6 @@ import 'contract_linking.dart';
 class CupcakeStore extends GetView<ContractLinker> {
   CupcakeStore({super.key});
 
-  final ContractLinker cl = ContractLinker();
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -22,7 +20,15 @@ class CupcakeStore extends GetView<ContractLinker> {
                 margin: const EdgeInsets.only(top: 40),
                 width: double.infinity,
                 child: Text(
-                  'Machine Balance: ${cl.machineBalance.value}',
+                  'Machine Balance: ${controller.machineBalance.value}',
+                  style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.normal),
+                  textAlign: TextAlign.left,
+                )),
+            Container(
+                margin: const EdgeInsets.only(top: 10),
+                width: double.infinity,
+                child: Text(
+                  'My Economic State: ${controller.economicState.value}',
                   style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.normal),
                   textAlign: TextAlign.left,
                 )),

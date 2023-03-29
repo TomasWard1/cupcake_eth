@@ -7,9 +7,9 @@ import 'package:web3dart/web3dart.dart';
 import 'package:web_socket_channel/io.dart';
 
 class ContractLinker extends GetxController {
-  final String _rpcUrl = "http://127.0.0.1:7545";
+  final String _rpcUrl = "http://10.0.2.2:7545";
   final String _wsUrl = "ws://10.0.2.2:7545/";
-  final String _privateKey = "0x1d7b7ded689291a5e0ad27c2be3bcee534dde5fefb783f44877a3b645b628be5";
+  final String _privateKey = "0xed99ddb1690fd16f328f188061dae9136f715469bcd7708f9afa12e564e1f9fa";
 
   @override
   void onInit() async {
@@ -23,6 +23,7 @@ class ContractLinker extends GetxController {
   final balanceCount = 0.obs;
   final machineBalance = 0.obs;
   final balances = {}.obs;
+  final activeAddress = [].obs;
 
   //contract vars
   late Web3Client _client;
@@ -39,6 +40,7 @@ class ContractLinker extends GetxController {
   late ContractFunction _balances;
   late ContractFunction _balanceCount;
   late ContractFunction _machineBalance;
+  late ContractFunction _activeAddresses;
 
   contractLinking() async {
     await initialSetup();
@@ -48,6 +50,7 @@ class ContractLinker extends GetxController {
     // establish a connection to the ethereum rpc node. The socketConnector
     // property allows more efficient event streams over websocket instead of
     // http-polls. However, the socketConnector property is experimental.
+
     _client = Web3Client(_rpcUrl, Client(), socketConnector: () {
       return IOWebSocketChannel.connect(_wsUrl).cast<String>();
     });
@@ -67,7 +70,7 @@ class ContractLinker extends GetxController {
   }
 
   Future<void> getCredentials() async {
-    _credentials = await _client.credentialsFromPrivateKey(_privateKey);
+    _credentials = EthPrivateKey.fromHex(_privateKey);
   }
 
   Future<void> getDeployedContract() async {
@@ -84,42 +87,54 @@ class ContractLinker extends GetxController {
     _machineBalance = _contract.function("machine_balance");
 
     await addMe();
-    await setEconomicState();
-    await getBalances();
+    await refreshEconomicState();
+    await refreshMachineBalance();
+    await refreshActiveAddresses();
+    await refreshActiveBalances();
 
     contractLoading.value = false;
   }
 
   addMe() async {
+    BigInt cId = await _client.getChainId();
     await _client.sendTransaction(_credentials,
-        Transaction.callContract(contract: _contract, function: _addPerson, parameters: [_credentials.address]));
+        Transaction.callContract(contract: _contract, function: _addPerson, parameters: [_credentials.address]),
+        chainId: cId.toInt());
   }
 
-  setEconomicState() async {
-    String es = await _client.sendTransaction(
-        _credentials, Transaction.callContract(contract: _contract, function: _myEconomicState, parameters: []));
-    economicState.value = es;
+  refreshEconomicState() async {
+    List es = await _client.call(contract: _contract, function: _myEconomicState, params: []);
+    economicState.value = es[0];
   }
 
-  getBalances() async {
-    print('getting balances');
-
-    //get machine balance
-    List machineBalanceList = await _client.call(contract: _contract, function: _balanceCount, params: []);
-    BigInt machineBalanceBigInt = machineBalanceList[0];
-    machineBalance.value = machineBalanceBigInt.toInt();
-
+  refreshBalanceCount() async {
     //get balance count
     List balanceCountList = await _client.call(contract: _contract, function: _balanceCount, params: []);
     BigInt balanceCountBigInt = balanceCountList[0];
     balanceCount.value = balanceCountBigInt.toInt();
+  }
 
-    //get all user balances and store them in a map
+  refreshMachineBalance() async {
+    //get machine balance
+    List machineBalanceList = await _client.call(contract: _contract, function: _machineBalance, params: []);
+    BigInt machineBalanceBigInt = machineBalanceList[0];
+    machineBalance.value = machineBalanceBigInt.toInt();
+  }
+
+  refreshActiveAddresses() async {
+    refreshBalanceCount();
+
     for (var i = 0; i < balanceCount.value; i++) {
-      List temp = await _client.call(contract: _contract, function: _balances, params: []);
+      List temp = await _client.call(contract: _contract, function: _activeAddresses, params: [BigInt.from(i)]);
+      print(temp);
+    }
+  }
+
+  refreshActiveBalances() async {
+    refreshActiveAddresses();
+    for (var i = 0; i < activeAddress.length; i++) {
+      List temp = await _client.call(contract: _contract, function: _balances, params: [activeAddress[i]]);
       balances[temp[i][0]] = temp[i][1];
     }
-
-    contractLoading.value = false;
   }
 }
