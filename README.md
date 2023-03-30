@@ -1,4 +1,4 @@
-# cupcake_eth2
+# cupcake_eth
 
 Bienvenid@ a Cupcake Eth.
 
