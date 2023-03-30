@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart';
@@ -9,7 +10,7 @@ import 'package:web_socket_channel/io.dart';
 class ContractLinker extends GetxController {
   final String _rpcUrl = "http://10.0.2.2:7545";
   final String _wsUrl = "ws://10.0.2.2:7545/";
-  final String _privateKey = "0xed99ddb1690fd16f328f188061dae9136f715469bcd7708f9afa12e564e1f9fa";
+  final String _privateKey = "0x7532cA092dFbda1752852b9feB936983128EDBe3";
 
   @override
   void onInit() async {
@@ -19,11 +20,13 @@ class ContractLinker extends GetxController {
 
   //my vars
   final contractLoading = true.obs;
-  final economicState = ''.obs;
   final balanceCount = 0.obs;
   final machineBalance = 0.obs;
-  final balances = {}.obs;
-  final activeAddress = [].obs;
+  RxString myAddress = ''.obs;
+  RxMap<String, int> balances = RxMap<String, int>({});
+  RxList<String> activeAddress = RxList<String>([]);
+  TextEditingController ethAddressController = TextEditingController();
+  TextEditingController cupcakeAmountController = TextEditingController();
 
   //contract vars
   late Web3Client _client;
@@ -36,11 +39,11 @@ class ContractLinker extends GetxController {
   late ContractFunction _addPerson;
   late ContractFunction _buyFromMachine;
   late ContractFunction _buyFromUser;
-  late ContractFunction _myEconomicState;
   late ContractFunction _balances;
   late ContractFunction _balanceCount;
   late ContractFunction _machineBalance;
   late ContractFunction _activeAddresses;
+  late ContractFunction _reset;
 
   contractLinking() async {
     await initialSetup();
@@ -71,6 +74,7 @@ class ContractLinker extends GetxController {
 
   Future<void> getCredentials() async {
     _credentials = EthPrivateKey.fromHex(_privateKey);
+    myAddress.value = _credentials.address.hex;
   }
 
   Future<void> getDeployedContract() async {
@@ -81,18 +85,21 @@ class ContractLinker extends GetxController {
     _addPerson = _contract.function("addPerson");
     _buyFromMachine = _contract.function("buyFromMachine");
     _buyFromUser = _contract.function("buyFromUser");
-    _myEconomicState = _contract.function("myEconomicState");
     _balances = _contract.function("balances");
     _balanceCount = _contract.function("balance_count");
     _machineBalance = _contract.function("machine_balance");
+    _activeAddresses = _contract.function("activeAddresses");
+    _reset = _contract.function("resetMachine");
 
-    await addMe();
-    await refreshEconomicState();
     await refreshMachineBalance();
     await refreshActiveAddresses();
-    await refreshActiveBalances();
 
-    contractLoading.value = false;
+    //agregar al que esta llamando al contrato a la lista de participantes del mercado
+    String myAddress = _credentials.address.hex;
+    if (!activeAddress.contains(myAddress)) {
+      await addMe();
+    }
+    setLoading(false);
   }
 
   addMe() async {
@@ -100,11 +107,18 @@ class ContractLinker extends GetxController {
     await _client.sendTransaction(_credentials,
         Transaction.callContract(contract: _contract, function: _addPerson, parameters: [_credentials.address]),
         chainId: cId.toInt());
+
+    await refreshActiveAddresses();
   }
 
-  refreshEconomicState() async {
-    List es = await _client.call(contract: _contract, function: _myEconomicState, params: []);
-    economicState.value = es[0];
+  addUser(String address) async {
+    EthereumAddress ad = EthereumAddress.fromHex(address);
+    BigInt cId = await _client.getChainId();
+    await _client.sendTransaction(
+        _credentials, Transaction.callContract(contract: _contract, function: _addPerson, parameters: [ad]),
+        chainId: cId.toInt());
+
+    await refreshActiveAddresses();
   }
 
   refreshBalanceCount() async {
@@ -122,19 +136,68 @@ class ContractLinker extends GetxController {
   }
 
   refreshActiveAddresses() async {
-    refreshBalanceCount();
+    await refreshBalanceCount();
 
     for (var i = 0; i < balanceCount.value; i++) {
       List temp = await _client.call(contract: _contract, function: _activeAddresses, params: [BigInt.from(i)]);
-      print(temp);
+      EthereumAddress ad = temp[0];
+      activeAddress.add(ad.hex);
+      activeAddress.refresh();
     }
+
+    await refreshActiveBalances();
   }
 
   refreshActiveBalances() async {
-    refreshActiveAddresses();
     for (var i = 0; i < activeAddress.length; i++) {
-      List temp = await _client.call(contract: _contract, function: _balances, params: [activeAddress[i]]);
-      balances[temp[i][0]] = temp[i][1];
+      List temp = await _client
+          .call(contract: _contract, function: _balances, params: [EthereumAddress.fromHex(activeAddress[i])]);
+      balances[activeAddress[i]] = (temp[0] as BigInt).toInt();
     }
+  }
+
+  buyFromMachine(int amount) async {
+    BigInt cId = await _client.getChainId();
+    await _client.sendTransaction(
+        _credentials,
+        Transaction.callContract(
+            contract: _contract, function: _buyFromMachine, parameters: [BigInt.parse(amount.toString())]),
+        chainId: cId.toInt());
+
+    await refreshMachineBalance();
+    await refreshActiveBalances();
+  }
+
+  buyFromUser(int amount, String address) async {
+    BigInt cId = await _client.getChainId();
+    await _client.sendTransaction(
+        _credentials,
+        Transaction.callContract(
+            contract: _contract,
+            function: _buyFromUser,
+            parameters: [EthereumAddress.fromHex(address), BigInt.parse(amount.toString())]),
+        chainId: cId.toInt());
+
+    await refreshMachineBalance();
+    await refreshActiveBalances();
+  }
+
+  String bytesToString(Uint8List bytes) {
+    return String.fromCharCodes(bytes);
+  }
+
+  resetMachine() async {
+    setLoading(true);
+
+    BigInt cId = await _client.getChainId();
+    await _client.sendTransaction(
+        _credentials, Transaction.callContract(contract: _contract, function: _reset, parameters: []),
+        chainId: cId.toInt());
+
+    setLoading(false);
+  }
+
+  setLoading(bool l) {
+    contractLoading.value = l;
   }
 }

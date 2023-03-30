@@ -3,10 +3,10 @@ pragma solidity 0.8.19;
 contract VendingMachine {
 
     //variables
-    uint public machine_balance = 200;
+    uint public machine_balance = 2000;
     uint256 public balance_count;
     address owner;
-    address[] activeAddresses;
+    address[] public activeAddresses;
     mapping(address => uint) public balances;
 
     //functions
@@ -15,12 +15,8 @@ contract VendingMachine {
         owner = msg.sender;
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner);
-        _;
-    }
 
-    function addPerson(address eth_address) public onlyOwner {
+    function addPerson(address eth_address) public {
         balances[eth_address] = 0;
         activeAddresses.push(eth_address);
         incrementCount();
@@ -31,26 +27,21 @@ contract VendingMachine {
     }
 
     function buyFromMachine(uint amount) public {
-        require(machine_balance >= amount,"Insufficient Cupcakes in Machine");
+        require(machine_balance >= amount, "Insufficient Cupcakes in Machine");
         balances[msg.sender] += amount;
         machine_balance -= amount;
     }
 
-    function buyFromUser(address eth_address,uint amount) public {
-        require(balances[eth_address] >= amount,"The user is not THAT rich");
+    function buyFromUser(address eth_address, uint amount) public {
+        require(balances[eth_address] >= amount, "The user is not THAT rich");
         balances[eth_address] -= amount;
         balances[msg.sender] += amount;
     }
 
-    function myEconomicState() public view returns(string memory) {
-        uint b =  balances[msg.sender];
-
-        if (b < 50) {
-            return "Poor";
-        } else if (b < 500) {
-            return "Rich";
-        } else {
-            return "Millionaire";
+    function resetMachine() public {
+        machine_balance = 2000;
+        for (uint256 i = 0; i < balance_count ; i++) {
+        balances[activeAddresses[i]] = 0;
         }
     }
 

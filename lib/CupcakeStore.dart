@@ -1,3 +1,4 @@
+import 'package:cupcake_eth2/functions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -25,28 +26,85 @@ class CupcakeStore extends GetView<ContractLinker> {
                   textAlign: TextAlign.left,
                 )),
             Container(
-                margin: const EdgeInsets.only(top: 10),
+                margin: const EdgeInsets.only(top: 10, bottom: 20),
                 width: double.infinity,
                 child: Text(
-                  'My Economic State: ${controller.economicState.value}',
-                  style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.normal),
+                  'My Economic State: ${CupcakeFunctions().getEconomicState()}',
+                  style: const TextStyle(color: Colors.black, fontSize: 18),
                   textAlign: TextAlign.left,
                 )),
-            const Spacer(),
+            const Divider(
+              color: Colors.black,
+              thickness: 1,
+            ),
+            Container(
+                margin: const EdgeInsets.only(top: 20, bottom: 15),
+                width: double.infinity,
+                child: const Text(
+                  '📡 Marketplace Tracker',
+                  style: TextStyle(color: Colors.black, fontSize: 25, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.left,
+                )),
+            if (controller.contractLoading.value) ...[
+              const Expanded(
+                child: Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.pinkAccent,
+                  ),
+                ),
+              )
+            ] else ...[
+              Expanded(
+                child: ListView.builder(
+                    shrinkWrap: true,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: controller.balances.length,
+                    itemBuilder: (c, i) {
+                      String address = controller.balances.keys.elementAt(i);
+                      String cupcakes = controller.balances[address].toString();
+                      bool isMe = address == controller.myAddress.value;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        decoration: BoxDecoration(
+                            border: Border.all(color: (isMe) ? Colors.pinkAccent : Colors.black, width: 3),
+                            borderRadius: BorderRadius.circular(20)),
+                        child: ListTile(
+                          title: Text(
+                            address,
+                            maxLines: 1,
+                            style: const TextStyle(
+                              color: Colors.black,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  cupcakes,
+                                  style:
+                                      const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 17),
+                                ),
+                              ),
+                              Image.asset('assets/cupcake.png', width: 25, height: 25),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+              ),
+            ],
             Row(
               children: [
                 const Spacer(),
-                actionButton('💵 Machine', () {
-                  print('Buy From Machine');
-                }),
+                actionButton('💵 Machine', () => CupcakeFunctions().buyDialog('Machine')),
                 const Spacer(),
-                actionButton('💵 User', () {
-                  print('Buy From User');
-                }),
+                actionButton('💵 User', () => CupcakeFunctions().buyDialog('User')),
                 const Spacer(),
-                actionButton('🔃 Reset', () {
-                  print('Reset');
-                }),
+                actionButton('🔃 Reset', () => CupcakeFunctions().resetMachine()),
+                const Spacer(),
+                actionButton('+', () => CupcakeFunctions().addUserFlow()),
                 const Spacer(),
               ],
             )
@@ -56,9 +114,9 @@ class CupcakeStore extends GetView<ContractLinker> {
     );
   }
 
-  Widget actionButton(String title, Function() action) {
+  Widget actionButton(String title, Function action) {
     return ElevatedButton(
-      onPressed: action,
+      onPressed: () => action(),
       style: ElevatedButton.styleFrom(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         backgroundColor: Colors.pinkAccent.shade100,
