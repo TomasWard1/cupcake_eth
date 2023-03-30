@@ -10,7 +10,7 @@ import 'package:web_socket_channel/io.dart';
 class ContractLinker extends GetxController {
   final String _rpcUrl = "http://10.0.2.2:7545";
   final String _wsUrl = "ws://10.0.2.2:7545/";
-  final String _privateKey = "0x7532cA092dFbda1752852b9feB936983128EDBe3";
+  final String _privateKey = "0x149ec747ffd3f2a1254f9db8d5611d476217c9e592da43f6c3cdd65947f568b9";
 
   @override
   void onInit() async {
@@ -193,6 +193,9 @@ class ContractLinker extends GetxController {
     await _client.sendTransaction(
         _credentials, Transaction.callContract(contract: _contract, function: _reset, parameters: []),
         chainId: cId.toInt());
+
+    await refreshMachineBalance();
+    await refreshActiveBalances();
 
     setLoading(false);
   }

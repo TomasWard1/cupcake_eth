@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 contract VendingMachine {
 
     //variables
-    uint public machine_balance = 2000;
+    uint public machine_balance = 2500;
     uint256 public balance_count;
     address owner;
     address[] public activeAddresses;
@@ -39,9 +39,9 @@ contract VendingMachine {
     }
 
     function resetMachine() public {
-        machine_balance = 2000;
-        for (uint256 i = 0; i < balance_count ; i++) {
-        balances[activeAddresses[i]] = 0;
+        machine_balance = 2500;
+        for (uint256 i = 0; i < balance_count; i++) {
+            balances[activeAddresses[i]] = 0;
         }
     }
 
