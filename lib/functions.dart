@@ -56,59 +56,76 @@ class CupcakeFunctions {
     Get.dialog(Dialog(
       child: Container(
         padding: const EdgeInsets.all(15),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                  width: double.infinity,
+                  child: Text('Buy from $type',
+                      style: const TextStyle(color: Colors.black, fontSize: 30, fontWeight: FontWeight.bold))),
+              SizedBox(
                 width: double.infinity,
-                child: Text('Buy from $type',
-                    style: const TextStyle(color: Colors.black, fontSize: 30, fontWeight: FontWeight.bold))),
-            SizedBox(
-              width: double.infinity,
-              child: Text(desc,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 19,
-                  )),
-            ),
-            if (!machine) ...[
+                child: Text(desc,
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 19,
+                    )),
+              ),
+              if (!machine) ...[
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: TextField(
+                    controller: cl.ethAddressController,
+                    decoration: const InputDecoration(helperText: 'Eth Address...'),
+                  ),
+                ),
+              ],
               Padding(
                 padding: const EdgeInsets.only(top: 10),
                 child: TextField(
-                  controller: cl.ethAddressController,
-                  decoration: const InputDecoration(helperText: 'Eth Address...'),
+                  controller: cl.cupcakeAmountController,
+                  onChanged: (t) {
+                    if (t.isNotEmpty) {
+                      cl.cupcakeAmount.value = int.parse(t);
+                    }
+                  },
+                  decoration: const InputDecoration(helperText: 'How many cupcakes?'),
                 ),
               ),
-            ],
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: TextField(
-                controller: cl.cupcakeAmountController,
-                decoration: const InputDecoration(helperText: 'How many cupcakes?'),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(top: 20),
-              width: double.infinity,
-              child: CupcakeStore().actionButton('Done', () async {
-                Get.back();
-                cl.setLoading(true);
+              if (!machine)
+                Obx(
+                  () => Container(
+                      margin: const EdgeInsets.only(top: 15),
+                      width: double.infinity,
+                      child: Text('Cost: ${cl.cupcakeAmount.value * 2} ETH',
+                          style: const TextStyle(color: Colors.black, fontSize: 25, fontWeight: FontWeight.bold))),
+                ),
+              Container(
+                margin: const EdgeInsets.only(top: 20),
+                width: double.infinity,
+                child: CupcakeStore().actionButton('Buy', () async {
+                  Get.back();
+                  cl.setLoading(true);
 
-                try {
-                  if (machine) {
-                    await cl.buyFromMachine(int.parse(cl.cupcakeAmountController.text));
-                  } else {
-                    await cl.buyFromUser(int.parse(cl.cupcakeAmountController.text), cl.ethAddressController.text);
+                  try {
+                    if (machine) {
+                      await cl.buyFromMachine(int.parse(cl.cupcakeAmountController.text));
+                    } else {
+                      await cl.buyFromUserWithEth(
+                          int.parse(cl.cupcakeAmountController.text), cl.ethAddressController.text);
+                    }
+                  } catch (e) {
+                    Get.snackbar('Error', e.toString(), duration: const Duration(seconds: 4));
                   }
-                } catch (e) {
-                  Get.snackbar('Error', e.toString(), duration: const Duration(seconds: 4));
-                }
-                cl.cupcakeAmountController.clear();
-                cl.ethAddressController.clear();
-                cl.setLoading(false);
-              }),
-            )
-          ],
+                  cl.cupcakeAmount.value = 0;
+                  cl.cupcakeAmountController.clear();
+                  cl.ethAddressController.clear();
+                  cl.setLoading(false);
+                }),
+              )
+            ],
+          ),
         ),
       ),
     ));

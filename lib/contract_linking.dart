@@ -10,7 +10,7 @@ import 'package:web_socket_channel/io.dart';
 class ContractLinker extends GetxController {
   final String _rpcUrl = "http://10.0.2.2:7545";
   final String _wsUrl = "ws://10.0.2.2:7545/";
-  final String _privateKey = "0x149ec747ffd3f2a1254f9db8d5611d476217c9e592da43f6c3cdd65947f568b9";
+  final String _privateKey = "0xd721e3d698605e61b4b50965a1c4bf61d1748d89a86e95696d756d69642ef343";
 
   @override
   void onInit() async {
@@ -22,6 +22,7 @@ class ContractLinker extends GetxController {
   final contractLoading = true.obs;
   final balanceCount = 0.obs;
   final machineBalance = 0.obs;
+  final cupcakeAmount = 0.obs;
   RxString myAddress = ''.obs;
   RxMap<String, int> balances = RxMap<String, int>({});
   RxList<String> activeAddress = RxList<String>([]);
@@ -170,6 +171,31 @@ class ContractLinker extends GetxController {
 
   buyFromUser(int amount, String address) async {
     BigInt cId = await _client.getChainId();
+    await _client.sendTransaction(
+        _credentials,
+        Transaction.callContract(
+            contract: _contract,
+            function: _buyFromUser,
+            parameters: [EthereumAddress.fromHex(address), BigInt.parse(amount.toString())]),
+        chainId: cId.toInt());
+
+    await refreshMachineBalance();
+    await refreshActiveBalances();
+  }
+
+  buyFromUserWithEth(int amount, String address) async {
+    BigInt cId = await _client.getChainId();
+    //send payment
+    await _client.sendTransaction(
+        _credentials,
+        Transaction(
+          to: EthereumAddress.fromHex(address),
+          value: EtherAmount.fromInt(EtherUnit.ether, amount * 2),
+        ),
+        chainId: cId.toInt());
+
+    //get cupcakes
+
     await _client.sendTransaction(
         _credentials,
         Transaction.callContract(
