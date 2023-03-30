@@ -1,3 +1,4 @@
+![alt text](https://github.com/TomasWard1/cupcake_eth/blob/master/cupcakeEthLogo.jpg?raw=true)
 # cupcake_eth
 
 Bienvenid@ a Cupcake Eth.
