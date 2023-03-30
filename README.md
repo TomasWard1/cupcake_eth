@@ -7,3 +7,6 @@ Interactuá en un marketplace de cupcakes en donde las transacciones son transpa
 
 Requerimientos:
 - Descargar Ganache Local Blockchain
+- Agregá usuarios usando los addresses que genera el Local Blockchain 
+
+Tip: Podes cambiar el usuario con el que accedes el marketplace modificando el private key en ContractLinker
