@@ -32,6 +32,8 @@ contract VendingMachine {
         machine_balance -= amount;
     }
 
+    //dev
+
     function buyFromUser(address eth_address, uint amount) public {
         require(balances[eth_address] >= amount, "The user is not THAT rich");
         balances[eth_address] -= amount;

@@ -23,9 +23,9 @@ class ContractLinker extends GetxController {
     final String _wsUrl = "ws://10.0.2.2:7545/";
    */
 
-  final String _rpcUrl = "http://192.168.0.185:7545";
-  final String _wsUrl = "ws://192.168.0.185:7545/";
-  final String _privateKey = "0xd721e3d698605e61b4b50965a1c4bf61d1748d89a86e95696d756d69642ef343"; //replace with a wallet's private key from local blockchain (Ganache)
+  final String _rpcUrl = "http://10.0.2.2:7545";
+  final String _wsUrl = "ws://10.0.2.2:7545/";
+  final String _privateKey = "0x21a3daa61b6efc45b23cc50877dfae3bd3549a266d8883e5154667bbc488fa36"; //replace with a wallet's private key from local blockchain (Ganache)
 
   @override
   void onInit() async {
