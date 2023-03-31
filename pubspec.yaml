@@ -39,6 +39,8 @@ dependencies:
   web_socket_channel: ^2.3.0
   get: ^4.6.5
   http: ^0.13.5
+  walletconnect_dart: ^0.0.11
+  url_launcher: ^6.1.10
 
 dev_dependencies:
   flutter_test:
